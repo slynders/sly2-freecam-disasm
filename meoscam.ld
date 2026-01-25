@@ -1,7 +1,10 @@
 OUTPUT_FORMAT(binary)
 SECTIONS {
-	. = 0xff000;
-	_begin = 0xff000;
+	. = 0x0feffb;
+
+	.data : {
+			/* Just include the section here */
+	}
 
 	.text 0xff000 : {
 		*(.text)
@@ -9,7 +12,6 @@ SECTIONS {
     	*(.gnu.linkonce.t*)
 	}
 
-	/* Only code is in here, no data */
 	/DISCARD/ : {
 		*(.reginfo)
 		*(.MIPS.abiflags)
