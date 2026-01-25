@@ -1,5 +1,12 @@
+binutils/
+
 # ref only
 res/meoscam.pnach
+meoscam_code_orig.bin
+
+*.bin
+*.o
+
 # can generate this
 meoscam.asm
 meoscam_paired.csv
