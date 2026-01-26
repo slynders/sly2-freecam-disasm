@@ -50,41 +50,41 @@ meosCamMain:
     mov.s       $f27, $f26
     mov.s       $f28, $f26
     mul.s       $f23, $f3, $f2
-    jal         meosFreecamGetPressedFloat
+    jal         UBtnpJoy_LocalCopy
     mul.s       $f24, $f1, $f0
     mov.s       $f20, $f0
     daddu       $a0, $s4, $zero
-    jal         meosFreecamGetPressedFloat
+    jal         UBtnpJoy_LocalCopy
     addiu       $a1, $zero, 0x3
     sub.s       $f20, $f20, $f0
     daddu       $a0, $s4, $zero
     addiu       $a1, $zero, 0x1
     abs.s       $f0, $f20
-    jal         meosFreecamGetPressedFloat
+    jal         UBtnpJoy_LocalCopy
     mul.s       $f25, $f20, $f0
     mov.s       $f20, $f0
     daddu       $a0, $s4, $zero
-    jal         meosFreecamGetPressedFloat
+    jal         UBtnpJoy_LocalCopy
     daddu       $a1, $zero, $zero
     sub.s       $f20, $f20, $f0
     daddu       $a0, $s4, $zero
     addiu       $a1, $zero, 0x8
     abs.s       $f0, $f20
-    jal         meosFreecamGetPressedFloat
+    jal         UBtnpJoy_LocalCopy
     mul.s       $f22, $f20, $f0
     mov.s       $f20, $f0
     daddu       $a0, $s4, $zero
-    jal         meosFreecamGetPressedFloat
+    jal         UBtnpJoy_LocalCopy
     addiu       $a1, $zero, 0xA
     sub.s       $f20, $f20, $f0
     daddu       $a0, $s4, $zero
     addiu       $a1, $zero, 0x9
     abs.s       $f0, $f20
-    jal         meosFreecamGetPressedFloat
+    jal         UBtnpJoy_LocalCopy
     mul.s       $f21, $f20, $f0
     mov.s       $f20, $f0
     daddu       $a0, $s4, $zero
-    jal         meosFreecamGetPressedFloat
+    jal         UBtnpJoy_LocalCopy
     addiu       $a1, $zero, 0xB
     sub.s       $f20, $f20, $f0
     abs.s       $f0, $f20
@@ -93,16 +93,16 @@ meosCamMain:
     swc1        $f25, 0x0($sp)
     swc1        $f22, 0x4($sp)
     andi        $v0, $v0, 0x400
-    beqz        $v0, . + 4 + (0x3 << 2)
+    beqz        $v0, .negate
     swc1        $f21, 0x8($sp)
-    b           . + 4 + (0x3 << 2)
+    b           .dontNegate
     mov.s       $f28, $f23
 
-/* label here */
+.negate:
     neg.s       $f26, $f23
     mov.s       $f27, $f24
 
-/* label here */
+.dontNegate:
     lui         $s7, %hi(CameraMatrix)
     daddu       $s1, $zero, $zero
     addiu       $v0, $s7, %lo(CameraMatrix)
@@ -153,7 +153,6 @@ meosCamMain:
     mtc1        $v0, $f13
     sltu        $s3, $zero, $v0
 
-/* label here */
 .floatNotNear:
     bnez        $s3, .L1
     addiu       $s2, $sp, 0x10
@@ -200,19 +199,19 @@ meosCamMain:
     daddu       $a0, $s2, $zero
 
 .L3:
-    jal         0x11BFF0
+    jal         DecomposeRotateMatrixEuler
     sq          $v0, 0x50($sp)
     sq          $v0, 0x50($sp)
     addiu       $v1, $s7, 0x52D0
     lwc1        $f20, 0x10($v1)
     lwc1        $f0, 0x50($sp)
     mul.s       $f12, $f20, $f28
-    jal         0x11CF60
+    jal         RadNormalize
     add.s       $f12, $f0, $f12
     mul.s       $f1, $f20, $f27
     lwc1        $f12, 0x54($sp)
     swc1        $f0, 0x50($sp)
-    jal         0x11CF60
+    jal         RadNormalize
     add.s       $f12, $f12, $f1
     lui         $at, 0xBFC7
     ori         $at, $at, 0xC82D
@@ -238,7 +237,7 @@ meosCamMain:
     mul.s       $f0, $f20, $f26
     lwc1        $f12, 0x58($sp)
     swc1        $f2, 0x54($sp)
-    jal         0x11CF60
+    jal         RadNormalize
     add.s       $f12, $f12, $f0
     swc1        $f0, 0x58($sp)
     addiu       $a0, $sp, 0x60
@@ -286,7 +285,7 @@ meosCamMain:
     mov.s       $f12, $f5
 
 .L8:
-    jal         0x14F5C8
+    jal         UnkFunc
     addiu       $a0, $fp, 0x5340
 
     lq          $s0, 0x140($sp) /* C stack epilogue */
@@ -312,12 +311,8 @@ meosCamMain:
     jr          $ra
     addiu       $sp, $sp, 0x1A0
 
-/*
-  a0 -> ptr
-  a1 -> button index
-  returns in v0 pressed value (float)
-*/
-meosFreecamGetPressedFloat:
+/* Local copy of UBtnpJoy() function */
+UBtnpJoy_LocalCopy:
     lui         $v0, %hi(ControllerButtonMaskLUT)
     /* index button mask table */
     sll         $v1, $a1, 1
@@ -377,8 +372,8 @@ meosFreecamEntryHook:
     lui         $t3, %hi(meosCamFlag0)
     lui         $t4, 0x3F80
     addiu       $t5, $zero, 0x1
-    lui         $t6, 0x2F
-    lui         $t7, 0x2A
+    lui         $t6, %hi(ControllerButtons)
+    lui         $t7, %hi(HUDScaleX)
 
     checkPadButton 0x200, .button0x200Pressed, meosCamFlag1
     /* Move on to checking the disable hud button. */
@@ -502,10 +497,10 @@ meosFreecamFunc2:
     beq         $a0, $t1, .andFailed
     lw          $a0, 0x30($a1)
 .flag4Unset2:
-    j           0x1C4824
+    j           UnkFunc2
     nop
 .andFailed:
-    j           0x1C4824
+    j           UnkFunc2
     addu        $a0, $zero, $zero
 
 meosFreecamFunc3:
@@ -513,8 +508,8 @@ meosFreecamFunc3:
     lb          $t0, %lo(meosCamFlag4)($t0)
     bgtz        $t0, .flag4Unset3
     addu        $v0, $zero, $zero
-    lui         $v1, 0x2E
-    lw          $v0, 0x5654($v1)
+    lui         $v1, %hi(UnkVar2)
+    lw          $v0, %lo(UnkVar2)($v1)
     xor         $v0, $v0, $a0
 .flag4Unset3:
     jr          $ra
