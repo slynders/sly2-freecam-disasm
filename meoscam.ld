@@ -34,12 +34,14 @@ SECTIONS {
 		*(.bss)
 	}
 
-	/* Sly functions/variables */
+	/* Sly functions/variables that are referenced
+	 TODO for region independence: seperate include file*/
 
-	/* Functions */
-	UnkClamp = 0x11d4d0;
-	MatrixMult = 0x11b628;
-	MatrixCopy = 0x14e190;
+	/* Functions. Names for these
+	 may come from the May prototype of Sly 1. */
+	FFloatsNear = 0x11d4d0;
+	LoadRotateMatrixEuler = 0x11b628;
+	SetCmMat = 0x14e190;
 
 	/* Variables */
 	CameraMatrix = 0x2e53a0;

@@ -16,7 +16,7 @@ meosCamFlag4:
 .text
 /* main update routine for the freecam when enabled */
 meosCamMain:
-    addiu       $sp, $sp, -0x1A0
+    addiu       $sp, $sp, -0x1A0 /* C stack prologue */
     sq          $s0, 0x140($sp)
     sq          $s1, 0x130($sp)
     sq          $s2, 0x120($sp)
@@ -45,6 +45,7 @@ meosCamMain:
     abs.s       $f2, $f3
     daddu       $a0, $s4, $zero
     abs.s       $f0, $f1
+    /* do buttons */
     addiu       $a1, $zero, 0x2
     mov.s       $f27, $f26
     mov.s       $f28, $f26
@@ -102,39 +103,59 @@ meosCamMain:
     mov.s       $f27, $f24
 
 /* label here */
-    lui         $s7, 0x2E
+    lui         $s7, %hi(CameraMatrix)
     daddu       $s1, $zero, $zero
-    addiu       $v0, $s7, 0x53A0
+    addiu       $v0, $s7, %lo(CameraMatrix)
+
+    /* a1 is the first row of the matrix
+       a0 is the second row
+       v1 is the third row
+       a2 is the fourth row */
     lq          $a2, 0x30($v0)
     lq          $a1, 0x0($v0)
+
     daddu       $s3, $zero, $zero
+
     lq          $a0, 0x10($v0)
     mtc1        $s1, $f12
+
     lq          $v1, 0x20($v0)
+
     lq          $s0, 0x0($sp)
+
     lui         $at, 0x38D1
     ori         $at, $at, 0xB717
+
     mtc1        $at, $f14
     mtc1        $s0, $f13
+
+    /* copy the matrix to the stack */
     sq          $a1, 0x10($sp)
     sq          $a0, 0x20($sp)
     sq          $v1, 0x30($sp)
-    jal         UnkClamp
+
+    jal         FFloatsNear
     sq          $a2, 0x40($sp)
-    beqz        $v0, . + 4 + (0xA << 2)
+    beqz        $v0, .floatNotNear
     nop
+
     prot3w      $v0, $s0
-    jal         UnkClamp
+
+    jal         FFloatsNear
     mtc1        $v0, $f13
+
     beqz        $v0, . + 4 + (0x5 << 2)
     nop
+
     pextuw      $v0, $zero, $s0
-    jal         UnkClamp
+
+    jal         FFloatsNear
     mtc1        $v0, $f13
     sltu        $s3, $zero, $v0
 
 /* label here */
-    bnez        $s3, . + 4 + (0x18 << 2)
+.floatNotNear:
+    bnez        $s3, .L1
     addiu       $s2, $sp, 0x10
     addiu       $v0, $s7, 0x52D0
     lwc1        $f1, 0x10($v0)
@@ -160,25 +181,25 @@ meosCamMain:
     daddu       $v0, $a0, $zero
     sq          $a1, 0x0($v0)
 
-/* label here */
+.L1:
     mtc1        $zero, $f0
     c.eq.s      $f27, $f0
     nop
-    bc1f        . + 4 + (0x9 << 2)
+    bc1f        .L2
     c.eq.s      $f28, $f0
     c.eq.s      $f28, $f0
     nop
-    bc1f        . + 4 + (0x6 << 2)
+    bc1f        .L3
     daddu       $a0, $s2, $zero
     c.eq.s      $f26, $f0
     nop
-    bc1t        . + 4 + (0x34 << 2)
+    bc1t        .L6
     addiu       $s0, $fp, 0x5340
 
-/* label here */
+.L2:
     daddu       $a0, $s2, $zero
 
-/* label here */
+.L3:
     jal         0x11BFF0
     sq          $v0, 0x50($sp)
     sq          $v0, 0x50($sp)
@@ -201,19 +222,19 @@ meosCamMain:
     mtc1        $at, $f3
     c.lt.s      $f0, $f1
     nop
-    bc1f        . + 4 + (0x3 << 2)
+    bc1f        .L4
     swc1        $f0, 0x54($sp)
-    b           . + 4 + (0x6 << 2)
+    b           .L5
     mov.s       $f2, $f1
 
-/* label here */
+.L4:
     c.lt.s      $f3, $f0
     nop
-    bc1f        . + 4 + (0x2 << 2)
+    bc1f        .L5
     mov.s       $f2, $f0
     mov.s       $f2, $f3
 
-/* label here */
+.L5:
     mul.s       $f0, $f20, $f26
     lwc1        $f12, 0x58($sp)
     swc1        $f2, 0x54($sp)
@@ -221,7 +242,7 @@ meosCamMain:
     add.s       $f12, $f12, $f0
     swc1        $f0, 0x58($sp)
     addiu       $a0, $sp, 0x60
-    jal         MatrixMult
+    jal         LoadRotateMatrixEuler
     lq          $a1, 0x50($sp)
     lq          $v1, 0x60($sp)
     lq          $a0, 0x70($sp)
@@ -234,9 +255,9 @@ meosCamMain:
     sw          $zero, 0x1C($sp)
     addiu       $s0, $fp, 0x5340
 
-/* label here */
+.L6:
     daddu       $a1, $s2, $zero
-    jal         MatrixCopy
+    jal         SetCmMat
     daddu       $a0, $s0, $zero
     neg.s       $f1, $f29
     lui         $at, 0x3E80
@@ -253,22 +274,22 @@ meosCamMain:
     mul.s       $f0, $f0, $f1
     add.s       $f12, $f3, $f0
     c.lt.s      $f12, $f4
-    bc1f        . + 4 + (0x3 << 2)
+    bc1f        .L7
     nop
-    b           . + 4 + (0x5 << 2)
+    b           .L8
     mov.s       $f12, $f4
 
-/* label here */
+.L7:
     c.lt.s      $f5, $f12
     nop
-    bc1tl       . + 4 + (0x1 << 2)
+    bc1tl       .L8
     mov.s       $f12, $f5
 
-/* label here */
+.L8:
     jal         0x14F5C8
     addiu       $a0, $fp, 0x5340
 
-    lq          $s0, 0x140($sp) /* epilogue */
+    lq          $s0, 0x140($sp) /* C stack epilogue */
     lq          $s1, 0x130($sp)
     lq          $s2, 0x120($sp)
     lq          $s3, 0x110($sp)
@@ -316,7 +337,7 @@ meosFreecamGetPressedFloat:
     addiu       $v0, $zero, 0x1
     lbu         $a0, 0x10C0($v1)
 
-    /* load float constant
+    /* load float constant */
     lui         $at, 0x3B80
     ori         $at, $at, 0x8081
     mtc1        $at, $f1
@@ -463,23 +484,24 @@ meosFreecamFunc1:
     lui         $t0, %hi(meosCamFlag4)
     lb          $t0, %lo(meosCamFlag4)($t0)
     lw          $v1, 0x314($v0)
-    blez        $t0, . + 4 + (0x3 << 2)
+    blez        $t0, .flag4Unset
     addiu       $v0, $v0, 0x3A0
     jr          $ra
     addu        $v0, $v1, $zero
+.flag4Unset:
     jr          $ra
     nop
 
 meosFreecamFunc2:
     lui         $t0, %hi(meosCamFlag4)
     lb          $t0, %lo(meosCamFlag4)($t0)
-    blez        $t0, .flag1Unset
+    blez        $t0, .flag4Unset2
     lw          $a0, 0x30($a1)
     addiu       $t1, $zero, 0x400
     and         $a0, $a0, $t1
     beq         $a0, $t1, .andFailed
     lw          $a0, 0x30($a1)
-.flag4Unset:
+.flag4Unset2:
     j           0x1C4824
     nop
 .andFailed:
@@ -489,24 +511,25 @@ meosFreecamFunc2:
 meosFreecamFunc3:
     lui         $t0, %hi(meosCamFlag4)
     lb          $t0, %lo(meosCamFlag4)($t0)
-    bgtz        $t0, .L4
+    bgtz        $t0, .flag4Unset3
     addu        $v0, $zero, $zero
     lui         $v1, 0x2E
     lw          $v0, 0x5654($v1)
     xor         $v0, $v0, $a0
-.L4:
+.flag4Unset3:
     jr          $ra
     sltiu       $v0, $v0, 0x1
 
 meosFreecamFunc4:
     lui         $t0, %hi(meosCamFlag4)
     lb          $t0, %lo(meosCamFlag4)($t0)
-    blez        $t0, . + 4 + (0x6 << 2)
+    blez        $t0, .exit
     lw          $v0, 0x10B8($a0)
     addiu       $t0, $zero, 0x800
     and         $v0, $v0, $t0
-    bne         $v0, $t0, . + 4 + (0x2 << 2)
+    bne         $v0, $t0, .exit
     nop
     addu        $v0, $zero, $zero
+.exit:
     jr          $ra
     and         $v0, $v0, $a1
