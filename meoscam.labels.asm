@@ -324,7 +324,7 @@ meosFreecamGetPressedFloat:
     jr          $ra
     nop
 
-.macro checkControllerButton mask trueLabel flagName
+.macro checkPadButton mask trueLabel flagName
     /* Get controller button bitset */
     lw $v1, %lo(ControllerButtons)($t6)
     addiu $t0, $zero, \mask
@@ -339,6 +339,8 @@ meosFreecamGetPressedFloat:
     sb $zero, %lo(\flagName)($t3)
 .endm
 
+/* This function is patched into a vtable lookup, and both processes some
+   freecam inputs, and also injects the main function pointer */
 meosFreecamEntryHook:
     lui         $t2, %hi(UnkVar)
     lui         $t3, %hi(meosCamFlag0)
@@ -347,54 +349,59 @@ meosFreecamEntryHook:
     lui         $t6, 0x2F
     lui         $t7, 0x2A
 
-    checkControllerButton 0x200, 0f, meosCamFlag1
-    b           2f
+    checkPadButton 0x200, .button0x200Pressed, meosCamFlag1
+    /* Move on to checking the disable hud button. */
+    b           .checkDisableHud
     nop
 
-0:
-    bgtz        $t0, 2f
+.button0x200Pressed:
+    bgtz        $t0, .checkDisableHud
     nop
     lb          $t0, %lo(meosCamFlag4)($t3)
-    blez        $t0, 1f
+    blez        $t0, .setFlag4
     sb          $t5, %lo(meosCamFlag1)($t3)
     sb          $zero, %lo(meosCamFlag4)($t3)
-    b           2f
+    b           .checkDisableHud
     nop
 
-1:
+.setFlag4:
     sb          $t5, %lo(meosCamFlag4)($t3)
 
-2:
+.checkDisableHud:
     lb          $t1, %lo(meosCamFlag4)($t3)
-    blez        $t1, 9f
+    blez        $t1, .bailRestoreVtable
+
+    /* Point $v0 to the freecam main function. When we return,
+       the game code will execute us instead of the vtable function
+       that would normally be called. */
     addiu       $v0, $t3, %lo(meosCamMain)
+
     addiu       $t0, $zero, 0x7
     sb          $zero, %lo(meosCamFlag0)($t3)
     sw          $t0, %lo(UnkVar)($t2)
 
-    checkControllerButton 0x100, .disableHudPressed, meosCamDisableHudFlag
-
-    b           5f
+    /* Check the disable HUD button */
+    checkPadButton 0x100, .disableHudPressed, meosCamDisableHudFlag
+    b           .checkPauseButton
     nop
 
 .disableHudPressed:
-    bgtz        $t0, 5f
+    bgtz        $t0, .checkPauseButton
     nop
     lw          $t1, %lo(HUDScaleX)($t7)
     blez        $t1, .resetHud
     sb          $t5, %lo(meosCamDisableHudFlag)($t3)
     sw          $zero, %lo(HUDScaleX)($t7)
     sw          $zero, %lo(HUDScaleY)($t7)
-    b           5f
+    b           .checkPauseButton
     nop
 
 .resetHud:
     sw          $t4, %lo(HUDScaleX)($t7)
     sw          $t4, %lo(HUDScaleY)($t7)
 
-5:
-    checkControllerButton 0x800, .pausePressed, meosCamPauseFlag
-
+.checkPauseButton:
+    checkPadButton 0x800, .pausePressed, meosCamPauseFlag
     jr          $ra
     nop
 
@@ -422,7 +429,8 @@ meosFreecamEntryHook:
     jr          $ra
     nop
 
-9:
+    /* like bail, but restores the original, unhooked, vtable lookup */
+.bailRestoreVtable:
     lb          $t0, %lo(meosCamFlag0)($t3)
     blez        $t0, .bail
     lw          $v0, 0x4($a1)
@@ -439,7 +447,7 @@ meosFreecamEntryHook:
     jr          $ra
     nop
 
-
+/* these functions replace some of the game functions */
 
 meosFreecamFunc1:
     lui         $t0, %hi(meosCamFlag4)
@@ -455,16 +463,16 @@ meosFreecamFunc1:
 meosFreecamFunc2:
     lui         $t0, %hi(meosCamFlag4)
     lb          $t0, %lo(meosCamFlag4)($t0)
-    blez        $t0, 0f
+    blez        $t0, .flag1Unset
     lw          $a0, 0x30($a1)
     addiu       $t1, $zero, 0x400
     and         $a0, $a0, $t1
-    beq         $a0, $t1, 1f
+    beq         $a0, $t1, .andFailed
     lw          $a0, 0x30($a1)
-0:
+.flag4Unset:
     j           0x1C4824
     nop
-1:
+.andFailed:
     j           0x1C4824
     addu        $a0, $zero, $zero
 
