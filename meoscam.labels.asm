@@ -49,41 +49,41 @@ meosCamMain:
     mov.s       $f27, $f26
     mov.s       $f28, $f26
     mul.s       $f23, $f3, $f2
-    jal         meosFreecamGetThing
+    jal         meosFreecamGetPressedFloat
     mul.s       $f24, $f1, $f0
     mov.s       $f20, $f0
     daddu       $a0, $s4, $zero
-    jal         meosFreecamGetThing
+    jal         meosFreecamGetPressedFloat
     addiu       $a1, $zero, 0x3
     sub.s       $f20, $f20, $f0
     daddu       $a0, $s4, $zero
     addiu       $a1, $zero, 0x1
     abs.s       $f0, $f20
-    jal         meosFreecamGetThing
+    jal         meosFreecamGetPressedFloat
     mul.s       $f25, $f20, $f0
     mov.s       $f20, $f0
     daddu       $a0, $s4, $zero
-    jal         meosFreecamGetThing
+    jal         meosFreecamGetPressedFloat
     daddu       $a1, $zero, $zero
     sub.s       $f20, $f20, $f0
     daddu       $a0, $s4, $zero
     addiu       $a1, $zero, 0x8
     abs.s       $f0, $f20
-    jal         meosFreecamGetThing
+    jal         meosFreecamGetPressedFloat
     mul.s       $f22, $f20, $f0
     mov.s       $f20, $f0
     daddu       $a0, $s4, $zero
-    jal         meosFreecamGetThing
+    jal         meosFreecamGetPressedFloat
     addiu       $a1, $zero, 0xA
     sub.s       $f20, $f20, $f0
     daddu       $a0, $s4, $zero
     addiu       $a1, $zero, 0x9
     abs.s       $f0, $f20
-    jal         meosFreecamGetThing
+    jal         meosFreecamGetPressedFloat
     mul.s       $f21, $f20, $f0
     mov.s       $f20, $f0
     daddu       $a0, $s4, $zero
-    jal         meosFreecamGetThing
+    jal         meosFreecamGetPressedFloat
     addiu       $a1, $zero, 0xB
     sub.s       $f20, $f20, $f0
     abs.s       $f0, $f20
@@ -96,8 +96,12 @@ meosCamMain:
     swc1        $f21, 0x8($sp)
     b           . + 4 + (0x3 << 2)
     mov.s       $f28, $f23
+
+/* label here */
     neg.s       $f26, $f23
     mov.s       $f27, $f24
+
+/* label here */
     lui         $s7, 0x2E
     daddu       $s1, $zero, $zero
     addiu       $v0, $s7, 0x53A0
@@ -115,19 +119,21 @@ meosCamMain:
     sq          $a1, 0x10($sp)
     sq          $a0, 0x20($sp)
     sq          $v1, 0x30($sp)
-    jal         0x11D4D0
+    jal         UnkClamp
     sq          $a2, 0x40($sp)
     beqz        $v0, . + 4 + (0xA << 2)
     nop
     prot3w      $v0, $s0
-    jal         0x11D4D0
+    jal         UnkClamp
     mtc1        $v0, $f13
     beqz        $v0, . + 4 + (0x5 << 2)
     nop
     pextuw      $v0, $zero, $s0
-    jal         0x11D4D0
+    jal         UnkClamp
     mtc1        $v0, $f13
     sltu        $s3, $zero, $v0
+
+/* label here */
     bnez        $s3, . + 4 + (0x18 << 2)
     addiu       $s2, $sp, 0x10
     addiu       $v0, $s7, 0x52D0
@@ -153,6 +159,8 @@ meosCamMain:
     qmfc2.ni    $a1, $vf1
     daddu       $v0, $a0, $zero
     sq          $a1, 0x0($v0)
+
+/* label here */
     mtc1        $zero, $f0
     c.eq.s      $f27, $f0
     nop
@@ -166,7 +174,11 @@ meosCamMain:
     nop
     bc1t        . + 4 + (0x34 << 2)
     addiu       $s0, $fp, 0x5340
+
+/* label here */
     daddu       $a0, $s2, $zero
+
+/* label here */
     jal         0x11BFF0
     sq          $v0, 0x50($sp)
     sq          $v0, 0x50($sp)
@@ -193,11 +205,15 @@ meosCamMain:
     swc1        $f0, 0x54($sp)
     b           . + 4 + (0x6 << 2)
     mov.s       $f2, $f1
+
+/* label here */
     c.lt.s      $f3, $f0
     nop
     bc1f        . + 4 + (0x2 << 2)
     mov.s       $f2, $f0
     mov.s       $f2, $f3
+
+/* label here */
     mul.s       $f0, $f20, $f26
     lwc1        $f12, 0x58($sp)
     swc1        $f2, 0x54($sp)
@@ -205,7 +221,7 @@ meosCamMain:
     add.s       $f12, $f12, $f0
     swc1        $f0, 0x58($sp)
     addiu       $a0, $sp, 0x60
-    jal         0x11B628
+    jal         MatrixMult
     lq          $a1, 0x50($sp)
     lq          $v1, 0x60($sp)
     lq          $a0, 0x70($sp)
@@ -217,8 +233,10 @@ meosCamMain:
     sw          $zero, 0x2C($sp)
     sw          $zero, 0x1C($sp)
     addiu       $s0, $fp, 0x5340
+
+/* label here */
     daddu       $a1, $s2, $zero
-    jal         0x14E190
+    jal         MatrixCopy
     daddu       $a0, $s0, $zero
     neg.s       $f1, $f29
     lui         $at, 0x3E80
@@ -239,12 +257,15 @@ meosCamMain:
     nop
     b           . + 4 + (0x5 << 2)
     mov.s       $f12, $f4
+
+/* label here */
     c.lt.s      $f5, $f12
     nop
     bc1tl       . + 4 + (0x1 << 2)
     mov.s       $f12, $f5
 
-    jal         MatrixCopy
+/* label here */
+    jal         0x14F5C8
     addiu       $a0, $fp, 0x5340
 
     lq          $s0, 0x140($sp) /* epilogue */
@@ -270,10 +291,15 @@ meosCamMain:
     jr          $ra
     addiu       $sp, $sp, 0x1A0
 
-meosFreecamGetThing:
-    lui         $v0, 0x2C
+/*
+  a0 -> ptr
+  a1 -> button index
+  returns in v0 pressed value (float)
+*/
+meosFreecamGetPressedFloat:
+    lui         $v0, %hi(ControllerButtonMaskLUT)
     sll         $v1, $a1, 1
-    addiu       $v0, $v0, 0x5BF0
+    addiu       $v0, $v0, %lo(ControllerButtonMaskLUT)
     daddu       $a2, $a0, $zero
     addu        $v1, $v1, $v0
     lhu         $a0, 0x0($v1)
@@ -298,91 +324,122 @@ meosFreecamGetThing:
     jr          $ra
     nop
 
+.macro checkControllerButton mask trueLabel flagName
+    /* Get controller button bitset */
+    lw $v1, %lo(ControllerButtons)($t6)
+    addiu $t0, $zero, \mask
+    /* do ControllerButtons & mask */
+    and $v1, $v1, $t0
+    /* if (ControllerButtons & mask) == mask, then branch to true label
+        $t0 will contain the current value of the flag for you */
+    beq $v1, $t0, \trueLabel
+    lb $t0, %lo(\flagName)($t3)
+
+    /* it wasn't pressed. */
+    sb $zero, %lo(\flagName)($t3)
+.endm
+
 meosFreecamEntryHook:
-    lui         $t2, 0x2E
-    lui         $t3, 0x10
+    lui         $t2, %hi(UnkVar)
+    lui         $t3, %hi(meosCamFlag0)
     lui         $t4, 0x3F80
     addiu       $t5, $zero, 0x1
     lui         $t6, 0x2F
     lui         $t7, 0x2A
-    lw          $v1, -0x7F4C($t6)
-    addiu       $t0, $zero, 0x200
-    and         $v1, $v1, $t0
-    beq         $v1, $t0, . + 4 + (0x4 << 2)
-    lb          $t0, -0x1004($t3)
-    sb          $zero, -0x1004($t3)
-    b           . + 4 + (0xA << 2)
+
+    checkControllerButton 0x200, 0f, meosCamFlag1
+    b           2f
     nop
-    bgtz        $t0, . + 4 + (0x8 << 2)
+
+0:
+    bgtz        $t0, 2f
     nop
-    lb          $t0, -0x1001($t3)
-    blez        $t0, . + 4 + (0x4 << 2)
-    sb          $t5, -0x1004($t3)
-    sb          $zero, -0x1001($t3)
-    b           . + 4 + (0x2 << 2)
+    lb          $t0, %lo(meosCamFlag4)($t3)
+    blez        $t0, 1f
+    sb          $t5, %lo(meosCamFlag1)($t3)
+    sb          $zero, %lo(meosCamFlag4)($t3)
+    b           2f
     nop
-    sb          $t5, -0x1001($t3)
-    lb          $t1, -0x1001($t3)
-    blez        $t1, . + 4 + (0x2E << 2)
-    addiu       $v0, $t3, -0x1000
+
+1:
+    sb          $t5, %lo(meosCamFlag4)($t3)
+
+2:
+    lb          $t1, %lo(meosCamFlag4)($t3)
+    blez        $t1, 9f
+    addiu       $v0, $t3, %lo(meosCamMain)
     addiu       $t0, $zero, 0x7
-    sb          $zero, -0x1005($t3)
-    sw          $t0, 0x6FC0($t2)
-    lw          $v1, -0x7F4C($t6)
-    addiu       $t0, $zero, 0x100
-    and         $v1, $v1, $t0
-    beq         $v1, $t0, . + 4 + (0x4 << 2)
-    lb          $t0, -0x1002($t3)
-    sb          $zero, -0x1002($t3)
-    b           . + 4 + (0xC << 2)
+    sb          $zero, %lo(meosCamFlag0)($t3)
+    sw          $t0, %lo(UnkVar)($t2)
+
+    checkControllerButton 0x100, .disableHudPressed, meosCamDisableHudFlag
+
+    b           5f
     nop
-    bgtz        $t0, . + 4 + (0xA << 2)
+
+.disableHudPressed:
+    bgtz        $t0, 5f
     nop
-    lw          $t1, 0x44E0($t7)
-    blez        $t1, . + 4 + (0x5 << 2)
-    sb          $t5, -0x1002($t3)
-    sw          $zero, 0x44E0($t7)
-    sw          $zero, 0x44EC($t7)
-    b           . + 4 + (0x3 << 2)
+    lw          $t1, %lo(HUDScaleX)($t7)
+    blez        $t1, .resetHud
+    sb          $t5, %lo(meosCamDisableHudFlag)($t3)
+    sw          $zero, %lo(HUDScaleX)($t7)
+    sw          $zero, %lo(HUDScaleY)($t7)
+    b           5f
     nop
-    sw          $t4, 0x44E0($t7)
-    sw          $t4, 0x44EC($t7)
-    lw          $v1, -0x7F4C($t6)
-    addiu       $t0, $zero, 0x800
-    and         $v1, $v1, $t0
-    beq         $v1, $t0, . + 4 + (0x4 << 2)
-    lb          $t0, -0x1003($t3)
-    sb          $zero, -0x1003($t3)
+
+.resetHud:
+    sw          $t4, %lo(HUDScaleX)($t7)
+    sw          $t4, %lo(HUDScaleY)($t7)
+
+5:
+    checkControllerButton 0x800, .pausePressed, meosCamPauseFlag
+
     jr          $ra
     nop
-    bgtz        $t0, . + 4 + (0xC << 2)
+
+.pausePressed:
+    bgtz        $t0, .justRet
     nop
-    lw          $t1, 0x52D8($t2)
-    bne         $t1, $t4, . + 4 + (0x7 << 2)
-    sb          $t5, -0x1003($t3)
+    /* if game speed isn't 1.0, reset it */
+    lw          $t1, %lo(GameClockSpeed)($t2)
+    bne         $t1, $t4, .resetClockSpeed
+    sb          $t5, %lo(meosCamPauseFlag)($t3)
+
+    /* 0.001 */
     lui         $v1, 0x38D1
     ori         $v1, $v1, 0xB717
-    sw          $v1, 0x52D8($t2)
-    sw          $v1, 0x52F4($t2)
+    sw          $v1, %lo(GameClockSpeed)($t2)
+    sw          $v1, %lo(EngineClockSpeed)($t2)
     jr          $ra
     nop
-    sw          $t4, 0x52D8($t2)
-    sw          $t4, 0x52F4($t2)
+
+.resetClockSpeed:
+    sw          $t4, %lo(GameClockSpeed)($t2)
+    sw          $t4, %lo(EngineClockSpeed)($t2)
+
+.justRet:
     jr          $ra
     nop
-    lb          $t0, -0x1005($t3)
-    blez        $t0, . + 4 + (0x3 << 2)
+
+9:
+    lb          $t0, %lo(meosCamFlag0)($t3)
+    blez        $t0, .bail
     lw          $v0, 0x4($a1)
     jr          $ra
     nop
-    sw          $t4, 0x44E0($t7)
-    sw          $t4, 0x44EC($t7)
-    sw          $t4, 0x52D8($t2)
-    sw          $t4, 0x52F4($t2)
-    sw          $t4, 0x5364($t2)
-    sb          $t5, -0x1005($t3)
+
+.bail:
+    sw          $t4, %lo(HUDScaleX)($t7)
+    sw          $t4, %lo(HUDScaleY)($t7)
+    sw          $t4, %lo(GameClockSpeed)($t2)
+    sw          $t4, %lo(EngineClockSpeed)($t2)
+    sw          $t4, %lo(CameraZoom)($t2)
+    sb          $t5, %lo(meosCamFlag0)($t3)
     jr          $ra
     nop
+
+
 
 meosFreecamFunc1:
     lui         $t0, %hi(meosCamFlag4)

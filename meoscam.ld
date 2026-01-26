@@ -36,7 +36,28 @@ SECTIONS {
 
 	/* Sly functions/variables */
 
-	MatrixCopy = 0x14F5C8;
+	/* Functions */
+	UnkClamp = 0x11d4d0;
+	MatrixMult = 0x11b628;
+	MatrixCopy = 0x14e190;
+
+	/* Variables */
+	CameraMatrix = 0x2e53a0;
+	CameraUnk = 0x2e52e0;
+	CameraZoom = 0x2e5364;
+
+	HUDScaleX = 0x2a44e0;
+	HUDScaleY = 0x2a44ec;
+
+	GameClockSpeed = 0x2e52d8;
+	EngineClockSpeed = 0x2e52f4;
+
+	UnkVar = 0x2e6fc0;
+
+	/* not sure */
+	ControllerButtons = 0x2e80b4;
+
+	ControllerButtonMaskLUT = 0x2c5bf0;
 
 	_end = .;
 }
