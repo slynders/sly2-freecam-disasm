@@ -1,14 +1,10 @@
 binutils/
 
 # ref only
-res/meoscam.pnach
-meoscam_code_orig.bin
+res/
 
+# build products
 *.pnach
-
 *.bin
 *.o
 
-# can generate this
-meoscam.asm
-meoscam_paired.csv

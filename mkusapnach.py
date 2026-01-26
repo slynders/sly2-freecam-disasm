@@ -104,4 +104,4 @@ with open('07652DD9.freecam.pnach', 'w') as pnachFileRaw:
              for word in read_as_word_chunks(codeFile):
                     cheat.write_word(word)
 
-print('the dance has been done.')
+print('pnach file written successfully')
