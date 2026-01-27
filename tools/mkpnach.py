@@ -45,7 +45,7 @@ except:
     print(f'Region {REGION_NAME} is not implemented yet')
     exit(1)
 
-print(region)
+#print(region)
 
 # gather the correct blob filename
 if REGION_NAME == 'pal':

@@ -151,10 +151,10 @@ meosFreecamFunc2:
     lw          $a0, 0x30($a1)
     /* Trampoline back into the game code. */
 .flag4Unset2:
-    j           UnkFunc2
+    j           Func2Trampoline
     nop
 .andFailed:
-    j           UnkFunc2
+    j           Func2Trampoline
     addu        $a0, $zero, $zero
 
 meosFreecamFunc3:

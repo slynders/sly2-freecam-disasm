@@ -13,7 +13,9 @@ DecomposeRotateMatrixEuler = 0x11bff0;
 SetCmMat = 0x14e190;
 
 UnkFunc = 0x14f5c8;
-UnkFunc2 = 0x1c4824;
+
+/* trampoline address of the func2 hook */
+Func2Trampoline = 0x1c4824;
 
 /* Variables */
 CameraMatrix = 0x2e53a0;
