@@ -3,22 +3,17 @@ SECTIONS {
 	. = 0xfeffb;
 
 	.data 0x0feffb: {
-		*(.data)
-		*(.data.*)
-    	*(.gnu.linkonce.d*)
+		OBJDIR/vars.o(.data)
 	}
 
-
 	.text 0xff000 : {
-		*(.text)
-		*(.text.*)
-    	*(.gnu.linkonce.t*)
+		OBJDIR/main.o(.text)
+		OBJDIR/hooks.o(.text)
 	}
 
 	/DISCARD/ : {
 		*(.reginfo)
 		*(.MIPS.abiflags)
-
 
 		*(.rodata)
 		*(.rodata.*)

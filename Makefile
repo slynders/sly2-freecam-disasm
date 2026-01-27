@@ -15,6 +15,12 @@ endif
 
 OBJDIR := obj/$(REGION)
 
+# objects (in the correct order)
+OBJECTS := \
+	$(OBJDIR)/main.o \
+	$(OBJDIR)/hooks.o \
+	$(OBJDIR)/vars.o
+
 ifeq ($(MATCHING),y)
 all: $(OBJDIR)/ $(OBJDIR)/meoscam_code.bin check
 else
@@ -34,28 +40,26 @@ clean:
 	rm -rf $(OBJDIR)
 
 # check sha256sum matches, for PAL only
+ifeq ($(MATCHING),y)
 check:
 	echo "b5c2ae13fdfc88fdf83ebb6acb83802cc3e9a5f680396cd39bda378068f7ec00  obj/pal/meoscam_code.bin" | sha256sum -c -
+endif
 
 $(OBJDIR)/:
 	mkdir -p $@
 
 ifeq ($(MATCHING),y)
-$(OBJDIR)/meoscam_code.bin: $(OBJDIR)/meoscam_code.o
-	sed 's|REGIONLD|regions/$(REGION).ld|' src/meoscam.ld > /tmp/lds_$(REGION).ld
-	$(LD) -T /tmp/lds_$(REGION).ld $< -o $(OBJDIR)/meoscam_code_linked.bin
+$(OBJDIR)/meoscam_code.bin: $(OBJECTS)
+	sed 's|REGIONLD|regions/$(REGION).ld|' src/meoscam.ld | sed 's|OBJDIR|$(OBJDIR)|' - > /tmp/lds_$(REGION).ld
+	$(LD) -T /tmp/lds_$(REGION).ld $(OBJECTS) -o $(OBJDIR)/meoscam_code_linked.bin
 	dd if=$(OBJDIR)/meoscam_code_linked.bin of=$@ bs=1 skip=5 status=none
-	rm /tmp/lds_$(REGION).ld
-
-$(OBJDIR)/meoscam_code.o: src/meoscam.asm
-	$(AS) -EL -G0 -g -march=r5900 $< -o $@
 else
-$(OBJDIR)/meoscam_code_nonmatching.bin: $(OBJDIR)/meoscam_code_nonmatching.o
+$(OBJDIR)/meoscam_code_nonmatching.bin: $(OBJECTS)
 	sed 's|REGIONLD|regions/$(REGION).ld|' src/meoscam.ld > /tmp/lds_$(REGION).ld
-	$(LD) -T /tmp/lds_$(REGION).ld $< -o $(OBJDIR)/meoscam_code_nonmatching_linked.bin
+	$(LD) -T /tmp/lds_$(REGION).ld $(OBJECTS) -o $(OBJDIR)/meoscam_code_nonmatching_linked.bin
 	dd if=$(OBJDIR)/meoscam_code_nonmatching_linked.bin of=$@ bs=1 skip=5 status=none
 	rm /tmp/lds_$(REGION).ld
-
-$(OBJDIR)/meoscam_code_nonmatching.o: src/meoscam.asm
-	$(AS) -EL -G0 -g -march=r5900 $< -o $@
 endif
+
+$(OBJDIR)/%.o: src/%.asm
+	$(AS) -EL -G0 -g -march=r5900 $< -o $@
