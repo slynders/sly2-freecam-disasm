@@ -30,12 +30,12 @@ REGION_TABLE = {
 }
 
 # Table of name -> int address pair. Populated by populateAddressTable().
-addrTable = {}
+addrTable : dict[str, int] = {}
 
 def findSymbolInElf(elfObject: ELFFile, symbolName: str):
     section = elfObject.get_section_by_name('.symtab')
     if not section:
-        raise ValueError('ELF doesnt have symbol table? WTF')
+        raise ValueError('ELF does not have a symbol table? WTF')
     if not isinstance(section, SymbolTableSection):
         raise ValueError('not a symbol table section? What?')
 
@@ -44,7 +44,7 @@ def findSymbolInElf(elfObject: ELFFile, symbolName: str):
             return symbol['st_value']
 
 
-def populateAddressTable(elfFileName):
+def populateAddressTable(elfFileName: str):
     print(f'Loading code blob ELF file \'{elfFileName}\'')
     # Addresses which we care about here
     caredAddresses = [
@@ -61,8 +61,8 @@ def populateAddressTable(elfFileName):
             addrTable[symName] = findSymbolInElf(elfObject, symName)
             print(f'Located {symName} @ {addrTable[symName]:08x}')
 
-# Reads a file in 4 byte (EE Word) chunks
-def read_as_word_chunks(file):
+# Reads a file in 4 byte (EE word) yielded chunks
+def readWordChunks(file):
     while True:
         data = file.read(4)
         if not data:
@@ -112,7 +112,7 @@ with PnachWriter.file(f'{region['pnachCRC']}.freecam.pnach') as pnachWriter:
             # For our last step, poke in the code blob.
             cheat.setAddress(addrTable['meosCamText'])
             with open(f'obj/{REGION_NAME}/{BLOB_FILENAME}.bin', 'rb') as codeFile:
-                for word in read_as_word_chunks(codeFile):
+                for word in readWordChunks(codeFile):
                         cheat.word(word, reverse=True)
 
 print('pnach file written successfully')
