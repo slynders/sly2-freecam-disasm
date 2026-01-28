@@ -2,11 +2,13 @@
 
 import binascii
 
+__all__ = [ 'PnachWriter' ]
+
 def splitByCount(s, n):
     return [s[i:i+n] for i in range(0, len(s), n)]
 
 # A pnach cheat
-class _PnachCheat:
+class PnachCheat:
     def __init__(self, pnach_writer):
         self._pnach_writer = pnach_writer
 
@@ -62,13 +64,13 @@ class PnachWriter:
 
     # Begins cheat. Returns a object which can be used to add
     # patche lines to the cheat
-    def cheat(self, section_name, author, comment) -> _PnachCheat:
+    def cheat(self, section_name, author, comment) -> PnachCheat:
        self._file.write(f'[{section_name}]\n')
        if author:
            self._file.write(f'author={author}\n')
        if comment:
            self._file.write(f'comment={comment}\n')
-       return _PnachCheat(self)
+       return PnachCheat(self)
 
 
     def _write_comment(self, comment):
