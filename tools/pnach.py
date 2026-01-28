@@ -41,7 +41,8 @@ class PnachCheat:
     def comment(self, com: str):
         self._pnach_writer._writeComment(com)
 
-    # Context manager functions
+    # Context manager functions. In this case, cheats just push/pop (essentially..) the previous
+    # addresses set in the writer before they were used.
     def __enter__(self):
         self._old_address = self._pnach_writer._getAddress()
         return self
@@ -82,17 +83,22 @@ class PnachWriter:
         return PnachWriter(open(filename, 'w'))
 
     def __init__(self, file):
-       self._file = file
-       # TODO: We should probably store per-cpu addresses, instead of
-       # just storing one master address. For now it's whatever, since
-       # the APIs don't really support IOP patch lines yet...
-       self._addr = 0x0
+        self._file = file
+        # TODO: We should probably store per-cpu addresses, instead of
+        # just storing one master address. For now it's whatever, since
+        # the APIs don't really support IOP patch lines yet...
+        self._addr = 0x0
 
     def _getAddress(self) -> int:
         return self._addr
 
     def _setAddress(self, address: int):
-       self._addr = address
+        # Currently PnachWriter._writePnachLine() can't "fall back" to a legacy type code.
+        # For later, this might be nice, since I believe the legacy
+        # code types can place anywhere. For now this sanity check is good enough.
+        if (self._addr & 0xf0000000) != 0:
+            raise ValueError(f'Address 0x{self._addr:08x} cannot be written to with E-type codes.')
+        self._addr = address
 
     def close(self):
         self._file.close()
@@ -108,9 +114,8 @@ class PnachWriter:
            self._file.write(f'comment={comment}\n')
        return PnachCheat(self)
 
-
     def _writeComment(self, comment: str):
-       self._file.write(f'//{comment}\n')
+        self._file.write(f'//{comment}\n')
 
     # Writes an E-type patch line for the given bytes.
     def _writePnachLine(self, mode: str, cpu: str, size: int, inByteString: bytes, reverse=False):
@@ -118,12 +123,6 @@ class PnachWriter:
         assertValidCpu(cpu)
         if len(inByteString) < size:
             raise ValueError('Invalid byte array for this size')
-
-        # Currently this code can't "fall back" to an legacy type code,
-        # for later, this might be nice, since I believe the legacy
-        # code types can place anywhere. For now this sanity check should work.
-        if (self._addr & 0xf0000000) != 0:
-            raise ValueError(f'Address 0x{self._addr:08x} cannot be written to with an E-type code.')
 
         putBytes = inByteString[:size]
         if reverse:
