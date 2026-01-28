@@ -31,10 +31,10 @@ OBJECTS := \
 
 ifeq ($(MATCHING),y)
 all: $(OBJDIR)/ $(OBJDIR)/meoscam_code$(BINARY_SUFFIX).bin check
-	./tools/mkpnach.py $(REGION) $(MATCHING)
+	./tools/mkpnach/mkpnach.py $(REGION) $(MATCHING)
 else
 all: $(OBJDIR)/ $(OBJDIR)/meoscam_code$(BINARY_SUFFIX).bin
-	./tools/mkpnach.py $(REGION) $(MATCHING)
+	./tools/mkpnach/mkpnach.py $(REGION) $(MATCHING)
 endif
 
 matrix:
