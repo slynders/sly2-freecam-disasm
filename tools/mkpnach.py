@@ -5,7 +5,7 @@ import sys
 from elftools.elf.elffile import ELFFile
 from elftools.elf.sections import SymbolTableSection
 
-from instutils import Instructions
+from instutils import Mips
 from pnach import PnachWriter
 
 
@@ -88,30 +88,31 @@ else:
 populateAddressTable(f'obj/{REGION_NAME}/{BLOB_FILENAME}_linked.elf')
 
 # Write the pnach out.
-with open(f'{region['pnachCRC']}.freecam.pnach', 'w') as pnachFileRaw:
-        pnachWriter = PnachWriter(pnachFileRaw)
-        cheat = pnachWriter.begin_cheat('Freecam','Meos for original freecam, modeco80 USA/Disasm', 'Press L3 to enable freecam. See original Meos pnach for other controls.')
-        # poke in the hooks
+with PnachWriter.file(f'{region['pnachCRC']}.freecam.pnach') as pnachWriter:
+        with pnachWriter.cheat('Freecam','Meos for original freecam, modeco80 USA/Disasm', 'Press L3 to enable freecam. See original Meos pnach for other controls.') as cheat:
+            # Poke in the hooks to the game code
 
-        # vtable entry hook
-        pnachWriter.set_base_address(region['entryHookAddress'])
-        cheat.write_word(Instructions.jal(addrTable['meosFreecamEntryHook']), reverse=False)
+            # vtable entry hook
+            cheat.setAddress(region['entryHookAddress'])
+            cheat.word(Mips.jal(addrTable['meosFreecamEntryHook']))
 
-        # fun1 hook
-        pnachWriter.set_base_address(region['func1HookAddress'])
-        cheat.write_word(Instructions.jal(addrTable['meosFreecamFunc1']), reverse=False)
-        cheat.write_word(Instructions.nop()) # delay slot nop
-        pnachWriter.set_base_address(region['func2HookAddress'])
-        cheat.write_word(Instructions.j(addrTable['meosFreecamFunc2']), reverse=False)
-        pnachWriter.set_base_address(region['func3HookAddress'])
-        cheat.write_word(Instructions.jal(addrTable['meosFreecamFunc3']), reverse=False)
-        pnachWriter.set_base_address(region['func4HookAddress'])
-        cheat.write_word(Instructions.jal(addrTable['meosFreecamFunc4']), reverse=False)
+            cheat.setAddress(region['func1HookAddress'])
+            cheat.word(Mips.jal(addrTable['meosFreecamFunc1']))
+            cheat.word(Mips.nop()) # delay slot nop
 
-        # poke in the code blob
-        pnachWriter.set_base_address(addrTable['meosCamText'])
-        with open(f'obj/{REGION_NAME}/{BLOB_FILENAME}.bin', 'rb') as codeFile:
-             for word in read_as_word_chunks(codeFile):
-                    cheat.write_word(word, reverse=True)
+            cheat.setAddress(region['func2HookAddress'])
+            cheat.word(Mips.j(addrTable['meosFreecamFunc2']))
+
+            cheat.setAddress(region['func3HookAddress'])
+            cheat.word(Mips.jal(addrTable['meosFreecamFunc3']))
+
+            cheat.setAddress(region['func4HookAddress'])
+            cheat.word(Mips.jal(addrTable['meosFreecamFunc4']))
+
+            # For our last step, poke in the code blob.
+            cheat.setAddress(addrTable['meosCamText'])
+            with open(f'obj/{REGION_NAME}/{BLOB_FILENAME}.bin', 'rb') as codeFile:
+                for word in read_as_word_chunks(codeFile):
+                        cheat.word(word, reverse=True)
 
 print('pnach file written successfully')

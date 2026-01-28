@@ -2,7 +2,7 @@ def iclass(c):
     return int(c << 26)
 
 # MIPS instruction encoding helpers.
-class Instructions:
+class Mips:
     @staticmethod
     def nop():
         return b'\x00\x00\x00\x00'
