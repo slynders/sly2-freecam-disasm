@@ -183,7 +183,7 @@ meosCamMain:
     c.eq.s      $f26, $f0
     nop
     bc1t        .L6
-    addiu       $s0, $fp, 0x5340
+    addiu       $s0, $fp, %lo(UnkCamStruct2)
 
 .L2:
     daddu       $a0, $s2, $zero
@@ -251,7 +251,7 @@ meosCamMain:
     neg.s       $f1, $f29
     lui         $at, 0x3E80
     mtc1        $at, $f2
-    addiu       $v0, $s7, 0x52D0
+    addiu       $v0, $s7, %lo(UnkCamStruct1)
     lwc1        $f3, 0x20($s0)
     lwc1        $f0, 0x10($v0)
     mul.s       $f1, $f1, $f2
